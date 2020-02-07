@@ -213,7 +213,7 @@ services:
       - "22000:8545"
     volumes:
       - vol1:/qdata
-      - ./examples/quick:/examples:ro
+      - ./config:/examples:ro
     depends_on:
       - txmanager1
     environment:
@@ -229,7 +229,7 @@ services:
       - "9081:9080"
     volumes:
       - vol1:/qdata
-      - ./examples/quick:/examples:ro
+      - ./config:/examples:ro
     networks:
       quorum-examples-net:
         ipv4_address: 172.16.239.101
@@ -242,7 +242,7 @@ services:
       - "22001:8545"
     volumes:
       - vol2:/qdata
-      - ./examples/quick:/examples:ro
+      - ./config:/examples:ro
     depends_on:
       - txmanager2
     environment:
@@ -258,7 +258,7 @@ services:
       - "9082:9080"
     volumes:
       - vol2:/qdata
-      - ./examples/quick:/examples:ro
+      - ./config:/examples:ro
     networks:
       quorum-examples-net:
         ipv4_address: 172.16.239.102
@@ -271,7 +271,7 @@ services:
       - "22002:8545"
     volumes:
       - vol3:/qdata
-      - ./examples/quick:/examples:ro
+      - ./config:/examples:ro
     depends_on:
       - txmanager3
     environment:
@@ -287,7 +287,7 @@ services:
       - "9083:9080"
     volumes:
       - vol3:/qdata
-      - ./examples/quick:/examples:ro
+      - ./config:/examples:ro
     networks:
       quorum-examples-net:
         ipv4_address: 172.16.239.103
