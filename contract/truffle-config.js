@@ -21,12 +21,14 @@ const fs = require('fs')
 const HDWalletProvider = require('truffle-hdwallet-provider');
 // const infuraKey = "fj4jll3k.....";
 //
-// const fs = require('fs');
-const wallets = {
-  1: process.env.ETH_MNEMONIC || fs.readFileSync(".secret").toString().trim(),
-  2: process.env.ETH_MNEMONIC || fs.readFileSync(".secret2").toString().trim(),
-}
 const NODE1 = 'http://localhost:22000'
+
+const wallets = {}
+try {
+  wallets[1] = process.env.ETH_MNEMONIC || fs.readFileSync(".secret").toString().trim()
+  // wallets[2] = process.env.ETH_MNEMONIC || fs.readFileSync(".secret2").toString().trim()
+} catch (err) {
+}
 
 function walletProvider(wallet, nodeAddress) {
   return new HDWalletProvider(wallets[wallet], nodeAddress)
