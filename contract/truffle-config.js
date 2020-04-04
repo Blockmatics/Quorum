@@ -21,14 +21,17 @@ const fs = require('fs')
 const HDWalletProvider = require('truffle-hdwallet-provider');
 // const infuraKey = "fj4jll3k.....";
 //
-// const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
-// const mnemonic = process.env.ETH_MNEMONIC || ''
-
 const NODE1 = 'http://localhost:22000'
 
-function walletProvider(nodeAddress) {
-  return new HDWalletProvider(mnemonic, nodeAddress)
+const wallets = {}
+try {
+  wallets[1] = process.env.ETH_MNEMONIC || fs.readFileSync(".secret").toString().trim()
+  // wallets[2] = process.env.ETH_MNEMONIC || fs.readFileSync(".secret2").toString().trim()
+} catch (err) {
+}
+
+function walletProvider(wallet, nodeAddress) {
+  return new HDWalletProvider(wallets[wallet], nodeAddress)
 }
 
 module.exports = {
@@ -56,7 +59,19 @@ module.exports = {
     },
 
     node1: {
-      provider: walletProvider(NODE1),
+      host: 'localhost',
+      port: 22000,
+      type: "quorum",
+      gasPrice: 0,
+      network_id: 10
+    },
+
+    // Add Node2 and/or Node3 here:
+
+
+
+    node1wallet: {
+      provider: walletProvider(1, NODE1),
       type: "quorum",
       gasPrice: 0,
       network_id: 10
