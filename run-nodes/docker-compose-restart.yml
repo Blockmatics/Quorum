@@ -55,7 +55,6 @@ x-quorum-def:
       GETH_ARGS_raft="--raft --raftport 50400"
       GETH_ARGS_istanbul="--emitcheckpoints --istanbul.blockperiod 1 --mine --minerthreads 1 --syncmode full"
       GETH_ARGS_clique="--mine --minerthreads 1 --syncmode full"
-      geth --datadir $${DDIR} init $${GENESIS_FILE}
       geth \
         --identity node$${NODE_ID}-${QUORUM_CONSENSUS:-istanbul} \
         --datadir $${DDIR} \
