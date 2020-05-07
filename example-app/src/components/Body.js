@@ -44,7 +44,7 @@ export default class Body extends React.Component {
           </p>
         </div>
       ) : (
-        <Button></Button>
+        <Button>Register</Button>
       )
     }
     </Card.Body>
