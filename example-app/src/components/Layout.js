@@ -5,6 +5,8 @@ import Button from 'react-bootstrap/Button'
 import { GiCroissant } from 'react-icons/gi'
 import LoginModal from './login'
 import wallet from './wallet'
+import db from './data'
+import contracts from './contracts'
 
 /**
  * Layout will be the central state for this simple demo app.
@@ -29,27 +31,30 @@ export default class Layout extends React.Component {
     this.setState({loggedIn: true})
   }
   login(user, network) {
-    let address = wallet[user].address
+    contracts.setWeb3Connection(network)
+    let account = db.accounts[user]
+    // let address = wallet[user].address
     this.setState({
       loggedIn: true,
       user,
       network,
-      address,
+      address: account.address,
       username: user === 'east' ? 'East Coast User' : 'West Coast User'
     })
-    if (db.account.public) {
+    if (account.public) {
+      let balance = await contracts.getBalance('public', account.address)
       this.setState({
         registeredPublic: true,
-        balancePublic: db.account.public.balance,
+        balancePublic: balance,
       })
     }
-    if (db.account.east) {
+    if (account.east) {
+      let balance = await contracts.getBalance('east', account.address)
       this.setState({
         registeredEast: true,
-        balanceEast: db.account.east.balance,
+        balanceEast: balance,
       })
     }
-  }
   }
   render() { 
     return (
@@ -85,7 +90,8 @@ export default class Layout extends React.Component {
 {
   this.state.loggedIn ? (
     <h4>Welcome {this.state.username}</h4>
-    <Body />
+    <Body 
+    />
   ) : (
     <h3>Log In to View Your ERC20 Tokens & Content.</h3>
   )
