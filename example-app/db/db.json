@@ -1,10 +1,12 @@
 {
   "accounts": {
     "east": {
-      "address": "0x9186eb3d20cbd1f5f992a950d808c4495153abd5"
+      "address": "0x9186eb3d20cbd1f5f992a950d808c4495153abd5",
+      "key": "794392ba288a24092030badaadfee71e3fa55ccef1d70c708baf55c07ed538a8"
     },
     "west": {
-      "address": "0x0638e1574728b6d862dd5d3a3e0942c3be47d996"
+      "address": "0x0638e1574728b6d862dd5d3a3e0942c3be47d996",
+      "key": "30bee17b2b8b1e774115f785e92474027d45d900a12a9d5d99af637c2d1a61bd"
     }
   },
   "posts": []

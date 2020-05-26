@@ -1,64 +1,77 @@
-const Web3 = require('web3')
-import artifactPublic from '../../contract/build/contracts/Public.json'
-import artifactEast from '../../contract/build/contracts/East.json'
+import Web3 from 'web3'
+// import quorumjs from "quorum-js"
+import artifactPublic from '../../../contract/build/contracts/Public.json'
+import artifactEast from '../../../contract/build/contracts/East.json'
+import artifactWest from '../../../contract/build/contracts/West.json'
+import data from './data'
 
 export default {
   setWeb3Connection,
   register,
   getBalance,
+  getTotalSupply,
+  unregister,
 }
 
-const NODE1 = "http://localhost:22000"
-const NODE2 = "http://localhost:22001"
+const nodesInfo = {
+  node1: {
+    uri: "http://localhost:22000",
+    // Coinbase wallet for node1:
+    address: '0xed9d02e382b34818e88B88a309c7fe71E65f419d',
+    // TX Manager Public Key for Node 1
+    publicKey: 'BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=',
+  },
+  node2: {
+    uri: "http://localhost:22001",
+    address: '0xca843569e3427144cead5e4d5999a3d0ccf92b8e',
+    publicKey: 'QfeDAys9MPDs2XHExtc84jKGHxZg/aj52DTh0vtA3Xc=',
+  }
+}
 
-// TX Manager Public Key for Node 1
-var node1PublicKey = 'BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo='
-// var sender = await web3.eth.getCoinbase()
-let node1admin = '0xed9d02e382b34818e88B88a309c7fe71E65f419d'
-let node2admin = '0xca843569e3427144cead5e4d5999a3d0ccf92b8e'
+// let node1Private = 'e6181caaffff94a09d7e332fc8da9884d99902c7874eb74354bdcadf411929f1'
 let contractAddressPublic = artifactPublic.networks[10].address
 let contractAddressEast =   artifactEast.networks[10].address
+let contractAddressWest =   artifactWest.networks[10].address
 
 let contracts = {
   public: {},
-  east:   {}
+  east:   {},
 }
 
-function setWeb3Connection(network) {
-  let networkNode = network === 'east' ? NODE1 : NODE2
-  let provider = new Web3.providers.HttpProvider(networkNode)
+async function setWeb3Connection(network, user) {
+  console.log('setWeb3Connec', network, user)
+  let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
+  console.log(networkNode)
+  let provider = new Web3.providers.HttpProvider(networkNode.uri)
   let web3 = new Web3(provider)
-  web3Instance.eth.getCoinbase().then(res => {
-    console.log(res)
-  })
+  // quorumjs.extend(web3);
+
+  /* This is a way to connect Metamask to the app */
+  // if (window.ethereum) {
+  //   window.web3 = new Web3(window.ethereum);
+  //   window.ethereum.enable();
+  // }
+
+  /* Add the secret key to the wallet for signing transactions */
+  let account = data.db.accounts[user]
+  web3.eth.accounts.wallet.add(account.key)
   contracts = {
-    public: new web3.eth.Contract(artifactPublic.abi, contractAddressPublic),
-    east:   new web3.eth.Contract(artifactEast.abi, contractAddressEast)
+    public: await new web3.eth.Contract(artifactPublic.abi, contractAddressPublic),
+    east:   await new web3.eth.Contract(artifactEast.abi, contractAddressEast),
+    west:   await new web3.eth.Contract(artifactWest.abi, contractAddressWest),
   }
+  console.log(contractAddressPublic, contractAddressEast, contractAddressWest)
+  /* This is not really necessary: */
+  // web3.eth.getCoinbase().then(res => {
+  //   console.log(res)
+  // })
 }
 
 
-async function register(network, recipient) {
-  let sender = network === 'east' ? node1admin : node2admin
-  let amount = 500
+async function getBalance(address, network) {
+  console.log('getBalance', address, network)
   let contract = contracts[network]
-  let res
-  try {
-    res = await contract.methods
-    .transfer(recipient, amount)
-    .send({
-      from: sender,
-    })
-  } catch (err) {
-    console.log(err)
-    throw err
-  }
-  console.log("Transaction Receipt:", res)
-  return amount
-}
-
-async function getBalance(network, address) {
-  let contract = contracts[network]
+  console.log(contract)
   let res
   try {
     res = await contract.methods
@@ -69,7 +82,99 @@ async function getBalance(network, address) {
     throw err
   }
   console.log("Call Res:", res)
+  return Number(res)
+}
+
+async function getTotalSupply(network) {
+  let contract = contracts[network]
+  let res
+  try {
+    res = await contract.methods
+    .totalSupply()
+    .call()
+  } catch (err) {
+    console.log(err)
+    throw err
+  }
+  console.log("Call Res:", res)
   return res
+}
+
+async function register(network, contractType, recipient) {
+  let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
+  let sender = networkNode.address
+  let publicKey = networkNode.publicKey
+  let amount = 500
+  let contract = contracts[contractType]
+
+  /* Set up the method parameters: */
+  let method = contract.methods
+    .transfer(recipient, amount)
+
+  let receipt = {}
+  try {
+    if (contractType === 'public') {
+      receipt = await method.send({
+        from: sender,
+      })
+    } else {  // It's a private contract:
+      receipt = await method.send({
+        from: sender,
+        privateFor: [publicKey],
+      })
+    }
+  } catch (err) {
+    console.log(err)
+    throw err
+  }
+  console.log("Transaction Receipt:", receipt)
+  return {
+    balance: amount,
+    receipt,
+  }
+}
+
+/**
+ * Send the ERC20 tokens back to the bank so user can restart the demo from scratch.
+ * @param {*} network 
+ * @param {*} contractType 
+ * @param {*} sender 
+ */
+async function unregister(network, contractType, sender) {
+  console.log(network, contractType, sender)
+  let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
+  let bankWallet = networkNode.address
+  let publicKey = networkNode.publicKey
+  let contract = contracts[contractType]
+  let receipt = {}
+  try {
+    let amount = await getBalance(sender, contractType)
+
+    let method = {}
+    if (contractType === 'public') {
+      let method = await contract.methods
+        .transfer(bankWallet, amount)
+        receipt = await method.send({
+          from: sender,
+          gasPrice: 0,
+          gas: 100000,
+        })
+    } else {  // It's a private contract:
+      let method = await contract.methods
+        .transferFrom(sender, bankWallet, amount)
+        receipt = await method.send({
+          from: bankWallet,
+          gasPrice: 0,
+          gas: 100000,
+          privateFor: [publicKey],
+        })
+    }
+  } catch (err) {
+    console.log(err)
+    throw err
+  }
+  console.log("Transaction Receipt:", receipt)
+  return receipt
 }
 
 // contractInst.methods.transfer(recipient, amount)

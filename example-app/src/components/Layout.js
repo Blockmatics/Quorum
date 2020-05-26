@@ -4,7 +4,7 @@ import Container from 'react-bootstrap/Container'
 import Button from 'react-bootstrap/Button'
 import { GiCroissant } from 'react-icons/gi'
 import LoginModal from './login'
-import wallet from './wallet'
+import Body from './Body'
 import db from './data'
 import contracts from './contracts'
 
@@ -30,9 +30,9 @@ export default class Layout extends React.Component {
   modalCloseLogin() {
     this.setState({loggedIn: true})
   }
-  login(user, network) {
-    contracts.setWeb3Connection(network)
-    let account = db.accounts[user]
+  async login(user, network) {
+    await contracts.setWeb3Connection(network, user)
+    let account = db.db.accounts[user]
     // let address = wallet[user].address
     this.setState({
       loggedIn: true,
@@ -41,20 +41,20 @@ export default class Layout extends React.Component {
       address: account.address,
       username: user === 'east' ? 'East Coast User' : 'West Coast User'
     })
-    if (account.public) {
-      let balance = await contracts.getBalance('public', account.address)
-      this.setState({
-        registeredPublic: true,
-        balancePublic: balance,
-      })
-    }
-    if (account.east) {
-      let balance = await contracts.getBalance('east', account.address)
-      this.setState({
-        registeredEast: true,
-        balanceEast: balance,
-      })
-    }
+    // if (account.east) {
+    //   let balance = await contracts.getBalance('east', account.address)
+    //   this.setState({
+    //     registeredEast: true,
+    //     balanceEast: balance,
+    //   })
+    // }
+    // if (account.public) {
+    //   let balance = await contracts.getBalance('public', account.address)
+    //   this.setState({
+    //     registeredPublic: true,
+    //     balancePublic: balance,
+    //   })
+    // }
   }
   render() { 
     return (
@@ -89,9 +89,12 @@ export default class Layout extends React.Component {
 <Container style={{ marginTop: '80px' }}>
 {
   this.state.loggedIn ? (
+    <>
     <h4>Welcome {this.state.username}</h4>
-    <Body 
+    <Body user={this.state.user}
+      network={this.state.network}
     />
+    </>
   ) : (
     <h3>Log In to View Your ERC20 Tokens & Content.</h3>
   )

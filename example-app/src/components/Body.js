@@ -6,27 +6,129 @@ import React from "react"
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Card from 'react-bootstrap/Card'
+import Button from 'react-bootstrap/Button'
+import Alert from 'react-bootstrap/Alert'
+import contracts from './contracts'
+import db from './data'
 
 export default class Body extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-
+      registeredPublic: false,
+      registeredEast: false,
+      balancePublic: 0,
+      balanceEast: 0,
+      balanceWest: 0,
+      totalSupplyPublic: 0,
+      totalSupplyEast: 0,
+      totalSupplyWest: 0,
+      /* Interactive state: */
+      receiptAlert: false,
+      receipt: ''
     }
+    this.unregister = this.unregister.bind(this)
   }
-  componentDidMount() {
-    if (db.account.public) {
+  async componentDidMount() {
+    let account = db.db.accounts[this.props.user]
+    console.log(account)
+    this.setState({
+      registeredPublic: !!account.public,
+      registeredEast: !!account.east,
+    })
+    this.account = account
+    /* pull contract data for Public */
+    let totalSupplyPublic = await contracts.getTotalSupply('public')
+    this.setState({ totalSupplyPublic })
+    let balancePublic = await contracts.getBalance(account.address, 'public')
+    if (account.public || balancePublic) {
       this.setState({
         registeredPublic: true,
-        balancePublic: db.account.public.balance,
+        balancePublic,
       })
+      db.register(this.props.user, 'public')
     }
-    if (db.account.east) {
+
+    /* pull contract data for East */
+    let balanceEast = await contracts.getBalance(account.address, 'east')
+    let totalSupplyEast = await contracts.getTotalSupply('east')
+    this.setState({ totalSupplyEast })
+    if (account.east || balanceEast) {
+      let totalSupplyEast = await contracts.getTotalSupply('east')
       this.setState({
         registeredEast: true,
-        balanceEast: db.account.east.balance,
+        balanceEast,
+        totalSupplyEast,
       })
+      db.register(this.props.user, 'east')
     }
+  }
+  async register(contractType) {
+    let address = this.account.address
+    let balance = 0
+    try {
+      /* Call Contract Register method */
+      let registerResult = await contracts.register(this.props.network, contractType, address)
+      this.showReceipt(true, JSON.stringify(registerResult.receipt, null, 2))
+      balance = registerResult.balance
+      /* Then save to our local db object */
+      db.register(this.props.user, contractType)
+    } catch (err) {
+      console.log(err)
+      throw err
+    }
+    switch (contractType) {
+      case 'public':
+        this.setState({
+          registeredPublic: true,
+          balancePublic: balance,
+        })
+        break
+      case 'east':
+        this.setState({
+          registeredEast: true,
+          balanceEast: balance,
+        })
+        break
+      default: break
+    }
+  }
+  async unregister() {
+    let address = this.account.address
+    try {
+      let receipts = []
+      if (this.state.balancePublic) {
+        /* Call Contract Unregister method */
+        let receipt = await contracts.unregister(this.props.network, 'public', address)
+        receipts.push(receipt)
+        /* Then save to our local db object */
+        db.unregister(this.props.user, 'public')
+      }
+      if (this.state.balanceEast) {
+        let receipt = await contracts.unregister(this.props.network, 'east', address)
+        receipts.push(receipt)
+        db.unregister(this.props.user, 'east')
+      }
+      if (receipts.length) {
+        this.showReceipt(true, JSON.stringify(receipts, null, 2))
+      }
+    } catch (err) {
+      console.log(err)
+      throw err
+    }
+    this.setState({
+      registeredPublic: false,
+      balancePublic: 0,
+      registeredEast: false,
+      balanceEast: 0,
+    })
+  }
+
+  showReceipt(show, receipt) {
+    this.setState({
+      receiptAlert: show,
+      receipt: receipt || '',
+    })
   }
   render() {
     return (
@@ -35,33 +137,99 @@ export default class Body extends React.Component {
   <Card>
     <Card.Header>Your ERC20 Balances</Card.Header>
     <Card.Body>
-    {
-      this.props.networks.public ? (
-        <div>
-          <h6>Balance for Public</h6>
+      <Row>
+        <Col md={12}>
+          <h6>Balance for Public Network</h6>
+          {
+            this.state.registeredPublic ? (
+              <>
+              <p>
+                EQP: {this.state.balancePublic}
+              </p>
+              </>
+            ) : (
+              <Button onClick={() => this.register('public')}>
+                Register for Public Tokens
+              </Button>
+            )
+          }
           <p>
-            EQP: {this.props.}
+            EQP totalSupply: {this.state.totalSupplyPublic}
           </p>
-        </div>
-      ) : (
-        <Button>Register</Button>
-      )
-    }
+        </Col>
+      </Row>
+      <Row>
+        <Col md={12}>
+        {
+          this.props.network === 'east' ? (
+          <>
+            <h6>Balance for East Coast Network</h6>
+            {
+              this.state.balanceEast ? (
+              <p>
+                EQE: {this.state.balanceEast}
+              </p>
+              ) : (
+              <Button onClick={() => this.register('east')}>
+                Register for East Tokens
+              </Button>
+              )
+            }
+          </>
+          ) : this.state.registeredEast && (
+          <>
+            <h6 style={{color: 'orange'}}>
+              You have a balance for East but are 
+              not connected to the East network so
+              your balance is likely invalid.
+            </h6>
+            <p className="text-muted">
+              EQE: (Unsynced Balance) {this.state.balanceEast}
+            </p>
+          </>
+          )
+        }
+        {
+          (this.props.network === 'east' || this.state.registeredEast) && (
+            <p>
+              EQE totalSupply: {this.state.totalSupplyEast}
+            </p>
+          )
+        }
+        </Col>
+      </Row>
+      <Row>
+        <Col md={12}>
+          <p className="text-muted">
+            You can reset your balances (to restart the demo) by clicking below
+          </p>
+          <Button variant="warning" onClick={this.unregister}>
+            Reset Balances
+          </Button>
+        </Col>
+      </Row>
     </Card.Body>
   </Card>
 </Col>
-</Row>
-<Row>
-<Col md={12}>
-  <Card>
-    <Card.Header>Your ERC20 Balances</Card.Header>
-    <Card.Body>
-    {
-      this.props.
-    }
-    </Card.Body>
-  </Card>
+<Col sm={12}>
+{
+  this.state.receiptAlert && (
+  <Alert variant="primary" dismissible
+    onClose={() => this.showReceipt(false)}
+    style={{position: "fixed", top: "100px"}}
+  >
+    <Alert.Heading>Transaction Receipt[s]</Alert.Heading>
+    <pre style={{
+      whiteSpace: "pre-wrap", wordBreak: "break-word",
+      maxHeight: "80vh", maxWidth: "65vw"
+    }}>
+      {this.state.receipt}
+    </pre>
+  </Alert>
+  )
+}
 </Col>
 </Row>
+    )
   }
 }
