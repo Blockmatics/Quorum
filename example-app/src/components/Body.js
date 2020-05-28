@@ -3,18 +3,23 @@
  * Show "Posts/shares" cards as the main body content.
  */
 import React from "react"
+import uuid from 'uuid'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Card from 'react-bootstrap/Card'
 import Button from 'react-bootstrap/Button'
 import Alert from 'react-bootstrap/Alert'
+import Form from 'react-bootstrap/Form'
 import contracts from './contracts'
 import db from './data'
+import Post from './Post'
+import NewPost from './NewPost'
 
 export default class Body extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      userObj: {},
       registeredPublic: false,
       registeredEast: false,
       balancePublic: 0,
@@ -25,7 +30,8 @@ export default class Body extends React.Component {
       totalSupplyWest: 0,
       /* Interactive state: */
       receiptAlert: false,
-      receipt: ''
+      receipt: '',
+      newPost: false,
     }
     this.unregister = this.unregister.bind(this)
   }
@@ -33,6 +39,7 @@ export default class Body extends React.Component {
     let account = db.db.accounts[this.props.user]
     console.log(account)
     this.setState({
+      userObj: account,
       registeredPublic: !!account.public,
       registeredEast: !!account.east,
     })
@@ -64,6 +71,9 @@ export default class Body extends React.Component {
     }
   }
   async register(contractType) {
+    // console.log(this.account.address)
+    // console.log(this.props.user)
+    // return
     let address = this.account.address
     let balance = 0
     try {
@@ -130,8 +140,40 @@ export default class Body extends React.Component {
       receipt: receipt || '',
     })
   }
+  modalShowNewPost(show) {
+    this.setState({ newPost: show })
+  }
+  /**
+   * Update balances.
+   * Splice the post into the top of list of posts.
+   * @param {*} post 
+   */
+  submitPost(post, amount, receipt) {
+    db.db.posts.splice(0, 0, post)
+    // db.db.postsLookup[post.id] = post
+    if (amount) {
+      this.setState({
+        balancePublic: this.state.balancePublic - amount
+      })
+      this.showReceipt(true, JSON.stringify(receipt, null, 2))
+    }
+  }
+  donate(contractType, amount, receipt) {
+    if (contractType === 'public') {
+      this.setState({
+        balancePublic: this.state.balancePublic - amount
+      })
+    } else {
+      this.setState({
+        balanceEast: this.state.balanceEast - amount
+      })
+    }
+    this.showReceipt(true, JSON.stringify(receipt, null, 2))
+  }
   render() {
+    let posts = db.db.posts
     return (
+<>
 <Row>
 <Col md={12}>
   <Card>
@@ -211,6 +253,43 @@ export default class Body extends React.Component {
     </Card.Body>
   </Card>
 </Col>
+</Row>
+<Row>
+<Col sm={12}>
+  <h2>Community Posts</h2>
+  <Form.Group controlId="formBasicEmail">
+    <Form.Label>Create a new donation request or share some new info</Form.Label>
+    <Form.Control type="text" size="lg"
+      placeholder="Create a Post" 
+      onClick={() => this.modalShowNewPost(true)}
+    />
+  </Form.Group>
+  <Button variant="primary" onClick={() => this.modalShowNewPost(true)}>
+    Create a Post
+  </Button>
+</Col>
+{
+  posts.map(post => {
+    if (post.network !== "public" && post.network !== this.props.network) {
+      return
+    }
+    return (
+      <Post post={post} key={uuid.v4()} 
+        userObj={this.state.userObj}
+        donate={this.donate.bind(this)}
+      />
+    )
+  })
+}
+<NewPost show={this.state.newPost}
+  close={() => this.modalShowNewPost(false)}
+  user={this.props.user}
+  userObj={this.state.userObj}
+  // username={this.account.username}
+  submit={this.submitPost.bind(this)}
+/>
+</Row>
+<Row>
 <Col sm={12}>
 {
   this.state.receiptAlert && (
@@ -230,6 +309,7 @@ export default class Body extends React.Component {
 }
 </Col>
 </Row>
+</>
     )
   }
 }

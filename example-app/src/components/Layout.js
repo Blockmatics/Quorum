@@ -41,20 +41,6 @@ export default class Layout extends React.Component {
       address: account.address,
       username: user === 'east' ? 'East Coast User' : 'West Coast User'
     })
-    // if (account.east) {
-    //   let balance = await contracts.getBalance('east', account.address)
-    //   this.setState({
-    //     registeredEast: true,
-    //     balanceEast: balance,
-    //   })
-    // }
-    // if (account.public) {
-    //   let balance = await contracts.getBalance('public', account.address)
-    //   this.setState({
-    //     registeredPublic: true,
-    //     balancePublic: balance,
-    //   })
-    // }
   }
   render() { 
     return (
@@ -90,6 +76,9 @@ export default class Layout extends React.Component {
 {
   this.state.loggedIn ? (
     <>
+    <h4 style={{color: '#d4af37'}}>
+      Network: {this.state.network}
+    </h4>
     <h4>Welcome {this.state.username}</h4>
     <Body user={this.state.user}
       network={this.state.network}

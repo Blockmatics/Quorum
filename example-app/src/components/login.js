@@ -18,6 +18,8 @@ export default class Login extends React.Component {
     this.setState({ [name]: value })
   }
   async login() {
+    // console.log(this.state.user)
+    // return
     await this.props.login(this.state.user, this.state.network)
     this.props.close()
     this.setState({

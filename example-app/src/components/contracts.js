@@ -10,6 +10,7 @@ export default {
   register,
   getBalance,
   getTotalSupply,
+  transfer,
   unregister,
 }
 
@@ -39,9 +40,9 @@ let contracts = {
 }
 
 async function setWeb3Connection(network, user) {
-  console.log('setWeb3Connec', network, user)
+  // console.log('setWeb3Connec', network, user)
   let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
-  console.log(networkNode)
+  // console.log(networkNode)
   let provider = new Web3.providers.HttpProvider(networkNode.uri)
   let web3 = new Web3(provider)
   // quorumjs.extend(web3);
@@ -69,9 +70,9 @@ async function setWeb3Connection(network, user) {
 
 
 async function getBalance(address, network) {
-  console.log('getBalance', address, network)
+  // console.log('getBalance', address, network)
   let contract = contracts[network]
-  console.log(contract)
+  // console.log(contract)
   let res
   try {
     res = await contract.methods
@@ -134,6 +135,49 @@ async function register(network, contractType, recipient) {
   }
 }
 
+async function transfer(network, contractType, sender, recipient, amount) {
+  let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
+  let bankWallet = networkNode.address
+  let publicKey = networkNode.publicKey
+  let contract = contracts[contractType]
+  let receipt = {}
+
+  /**
+   * If the recipient is "network", it means that user is posting a public post
+   * and needs to pay the fee to the public smart contract.
+   * So change "Recipient" to 
+   */
+  if (recipient === 'network') {
+    recipient = bankWallet
+  }
+
+  try {
+    if (contractType === 'public') {
+      receipt = await contract.methods
+        .transfer(recipient, amount)
+        .send({
+          from: sender,
+          gasPrice: 0,
+          gas: 100000,
+        })
+    } else {  // It's a private contract:
+      receipt = await contract.methds
+        .transferFrom(sender, recipient, amount)
+        .send({
+          from: bankWallet,
+          gasPrice: 0,
+          gas: 100000,
+          privateFor: [publicKey],
+        })
+    }
+  } catch (err) {
+    console.log(err)
+    throw err
+  }
+  console.log("Transaction Receipt:", receipt)
+  return receipt
+}
+
 /**
  * Send the ERC20 tokens back to the bank so user can restart the demo from scratch.
  * @param {*} network 
@@ -141,7 +185,7 @@ async function register(network, contractType, recipient) {
  * @param {*} sender 
  */
 async function unregister(network, contractType, sender) {
-  console.log(network, contractType, sender)
+  // console.log(network, contractType, sender)
   let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
   let bankWallet = networkNode.address
   let publicKey = networkNode.publicKey
@@ -150,19 +194,18 @@ async function unregister(network, contractType, sender) {
   try {
     let amount = await getBalance(sender, contractType)
 
-    let method = {}
     if (contractType === 'public') {
-      let method = await contract.methods
+      receipt = await contract.methods
         .transfer(bankWallet, amount)
-        receipt = await method.send({
+        .send({
           from: sender,
           gasPrice: 0,
           gas: 100000,
         })
     } else {  // It's a private contract:
-      let method = await contract.methods
+      receipt = await contract.methods
         .transferFrom(sender, bankWallet, amount)
-        receipt = await method.send({
+        .send({
           from: bankWallet,
           gasPrice: 0,
           gas: 100000,
