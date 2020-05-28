@@ -57,6 +57,7 @@ export default class Login extends React.Component {
     await this.props.submit(post, amount, receipt)
     this.props.close()
     this.setState({
+      network: 'public',
       text: '',
     })
   }

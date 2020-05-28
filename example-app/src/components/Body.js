@@ -14,6 +14,7 @@ import contracts from './contracts'
 import db from './data'
 import Post from './Post'
 import NewPost from './NewPost'
+import Transfer from './Transfer'
 
 export default class Body extends React.Component {
   constructor(props) {
@@ -32,12 +33,12 @@ export default class Body extends React.Component {
       receiptAlert: false,
       receipt: '',
       newPost: false,
+      transferModal: false,
     }
     this.unregister = this.unregister.bind(this)
   }
   async componentDidMount() {
     let account = db.db.accounts[this.props.user]
-    console.log(account)
     this.setState({
       userObj: account,
       registeredPublic: !!account.public,
@@ -143,6 +144,9 @@ export default class Body extends React.Component {
   modalShowNewPost(show) {
     this.setState({ newPost: show })
   }
+  modalShowTransfer(show) {
+    this.setState({ transferModal: show })
+  }
   /**
    * Update balances.
    * Splice the post into the top of list of posts.
@@ -210,6 +214,12 @@ export default class Body extends React.Component {
               this.state.balanceEast ? (
               <p>
                 EQE: {this.state.balanceEast}
+                <Button variant="secondary"
+                  onClick={() => this.modalShowTransfer(true)}
+                  style={{ marginLeft: '20px'}}
+                >
+                  Create a Transfer
+                </Button>
               </p>
               ) : (
               <Button onClick={() => this.register('east')}>
@@ -281,14 +291,19 @@ export default class Body extends React.Component {
     )
   })
 }
+</Row>
 <NewPost show={this.state.newPost}
   close={() => this.modalShowNewPost(false)}
   user={this.props.user}
   userObj={this.state.userObj}
-  // username={this.account.username}
   submit={this.submitPost.bind(this)}
 />
-</Row>
+<Transfer show={this.state.transferModal}
+  close={() => this.modalShowTransfer(false)}
+  transfer={this.donate.bind(this)}
+  userObj={this.state.userObj}
+  contracts={contracts}
+/>
 <Row>
 <Col sm={12}>
 {

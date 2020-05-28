@@ -57,11 +57,10 @@ async function setWeb3Connection(network, user) {
   let account = data.db.accounts[user]
   web3.eth.accounts.wallet.add(account.key)
   contracts = {
-    public: await new web3.eth.Contract(artifactPublic.abi, contractAddressPublic),
-    east:   await new web3.eth.Contract(artifactEast.abi, contractAddressEast),
-    west:   await new web3.eth.Contract(artifactWest.abi, contractAddressWest),
+    public: new web3.eth.Contract(artifactPublic.abi, contractAddressPublic),
+    east:   new web3.eth.Contract(artifactEast.abi, contractAddressEast),
+    west:   new web3.eth.Contract(artifactWest.abi, contractAddressWest),
   }
-  console.log(contractAddressPublic, contractAddressEast, contractAddressWest)
   /* This is not really necessary: */
   // web3.eth.getCoinbase().then(res => {
   //   console.log(res)
@@ -141,7 +140,6 @@ async function transfer(network, contractType, sender, recipient, amount) {
   let publicKey = networkNode.publicKey
   let contract = contracts[contractType]
   let receipt = {}
-
   /**
    * If the recipient is "network", it means that user is posting a public post
    * and needs to pay the fee to the public smart contract.
@@ -161,7 +159,7 @@ async function transfer(network, contractType, sender, recipient, amount) {
           gas: 100000,
         })
     } else {  // It's a private contract:
-      receipt = await contract.methds
+      receipt = await contract.methods
         .transferFrom(sender, recipient, amount)
         .send({
           from: bankWallet,
