@@ -2,7 +2,7 @@ import Web3 from 'web3'
 // import quorumjs from "quorum-js"
 import artifactPublic from '../../../contract/build/contracts/Public.json'
 import artifactEast from '../../../contract/build/contracts/East.json'
-import artifactWest from '../../../contract/build/contracts/West.json'
+// import artifactWest from '../../../contract/build/contracts/West.json'
 import data from './data'
 
 export default {
@@ -32,7 +32,7 @@ const nodesInfo = {
 // let node1Private = 'e6181caaffff94a09d7e332fc8da9884d99902c7874eb74354bdcadf411929f1'
 let contractAddressPublic = artifactPublic.networks[10].address
 let contractAddressEast =   artifactEast.networks[10].address
-let contractAddressWest =   artifactWest.networks[10].address
+// let contractAddressWest =   artifactWest.networks[10].address
 
 let contracts = {
   public: {},
@@ -59,7 +59,7 @@ async function setWeb3Connection(network, user) {
   contracts = {
     public: new web3.eth.Contract(artifactPublic.abi, contractAddressPublic),
     east:   new web3.eth.Contract(artifactEast.abi, contractAddressEast),
-    west:   new web3.eth.Contract(artifactWest.abi, contractAddressWest),
+    // west:   new web3.eth.Contract(artifactWest.abi, contractAddressWest),
   }
   /* This is not really necessary: */
   // web3.eth.getCoinbase().then(res => {
@@ -71,7 +71,6 @@ async function setWeb3Connection(network, user) {
 async function getBalance(address, network) {
   // console.log('getBalance', address, network)
   let contract = contracts[network]
-  // console.log(contract)
   let res
   try {
     res = await contract.methods
