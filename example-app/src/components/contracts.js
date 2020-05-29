@@ -104,21 +104,27 @@ async function register(network, contractType, recipient) {
   let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
   let sender = networkNode.address
   let publicKey = networkNode.publicKey
-  let amount = 500
+  let amount = 0
+  let amountPublic = 500
+  let amountEast = 750
   let contract = contracts[contractType]
 
   /* Set up the method parameters: */
-  let method = contract.methods
-    .transfer(recipient, amount)
 
   let receipt = {}
   try {
     if (contractType === 'public') {
-      receipt = await method.send({
+      amount = amountPublic
+      receipt = await contract.methods
+      .transfer(recipient, amountPublic)
+      .send({
         from: sender,
       })
     } else {  // It's a private contract:
-      receipt = await method.send({
+      amount = amountEast
+      receipt = await contract.methods
+      .transfer(recipient, amountEast)
+      .send({
         from: sender,
         privateFor: [publicKey],
       })
