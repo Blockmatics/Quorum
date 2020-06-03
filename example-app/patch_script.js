@@ -30,6 +30,7 @@ let abi = eastJson.abi
 let networkId = 10
 let contractAddress = eastJson.networks[networkId].address
 let web3 = new Web3(new Web3.providers.HttpProvider(NODE1))
+
 quorumjs.extend(web3);
 console.log(Object.keys(web3.quorum))
 const enclaveOptions = {
@@ -44,18 +45,6 @@ let contractInstPublic = new web3.eth.Contract(abiPublic, contractAddressPublic)
 
 let transaction = contractInst.methods.approve(admin1, amount)
 let encodedTrans = transaction.encodeABI();
-
-
-// contractInst.methods
-//   .allowance(sender, admin)
-//   .call().then( res => {
-//     console.log(res)
-//   })
-// contractInst.methods
-//   .balanceOf(sender)
-//   .call().then( res => {
-//     console.log(res)
-//   })
 
 web3.eth.getTransactionCount(sender).then(count => {
   console.log(count)
@@ -81,7 +70,7 @@ web3.eth.getTransactionCount(sender).then(count => {
     console.log(receipt)
     /* Transfer half of totalSupply to Node 2 admin */
     contractInstPublic.methods
-      .transfer(admin2, amount / 2)
+      .transfer(admin2, amount / 8)
       .send({
         from: admin1
       })
@@ -92,3 +81,14 @@ web3.eth.getTransactionCount(sender).then(count => {
   return
 
 });
+
+// contractInst.methods
+//   .allowance(sender, admin)
+//   .call().then( res => {
+//     console.log(res)
+//   })
+// contractInst.methods
+//   .balanceOf(sender)
+//   .call().then( res => {
+//     console.log(res)
+//   })

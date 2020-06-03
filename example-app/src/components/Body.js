@@ -46,9 +46,9 @@ export default class Body extends React.Component {
     })
     this.account = account
     /* pull contract data for Public */
+    let balancePublic = await contracts.getBalance(account.address, 'public')
     let totalSupplyPublic = await contracts.getTotalSupply('public')
     this.setState({ totalSupplyPublic })
-    let balancePublic = await contracts.getBalance(account.address, 'public')
     if (account.public || balancePublic) {
       this.setState({
         registeredPublic: true,
@@ -180,6 +180,7 @@ export default class Body extends React.Component {
 <>
 <Row>
 <Col md={12}>
+  {/* WALLET DATA SECTION */}
   <Card>
     <Card.Header>Your ERC20 Balances</Card.Header>
     <Card.Body>
@@ -262,6 +263,7 @@ export default class Body extends React.Component {
       </Row>
     </Card.Body>
   </Card>
+  {/* END WALLET DATA SECTION */}
 </Col>
 </Row>
 <Row>

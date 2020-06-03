@@ -39,28 +39,28 @@ let contracts = {
   east:   {},
 }
 
+/**
+ * Triggered by Login - because login specifies which node needs to have a network
+ * connection set up.
+ * @param {*} network 
+ * @param {*} user 
+ */
 async function setWeb3Connection(network, user) {
   // console.log('setWeb3Connec', network, user)
   let networkNode = network === 'east' ? nodesInfo.node1 : nodesInfo.node2
   // console.log(networkNode)
   let provider = new Web3.providers.HttpProvider(networkNode.uri)
   let web3 = new Web3(provider)
-  // quorumjs.extend(web3);
-
-  /* This is a way to connect Metamask to the app */
-  // if (window.ethereum) {
-  //   window.web3 = new Web3(window.ethereum);
-  //   window.ethereum.enable();
-  // }
-
-  /* Add the secret key to the wallet for signing transactions */
-  let account = data.db.accounts[user]
-  web3.eth.accounts.wallet.add(account.key)
+  
   contracts = {
     public: new web3.eth.Contract(artifactPublic.abi, contractAddressPublic),
     east:   new web3.eth.Contract(artifactEast.abi, contractAddressEast),
     // west:   new web3.eth.Contract(artifactWest.abi, contractAddressWest),
   }
+
+  /* Add the secret key to the wallet for signing transactions */
+  let account = data.db.accounts[user]
+  web3.eth.accounts.wallet.add(account.key)
   /* This is not really necessary: */
   // web3.eth.getCoinbase().then(res => {
   //   console.log(res)
@@ -234,3 +234,9 @@ async function unregister(network, contractType, sender) {
 //   .catch(err => {
 //     console.log(err)
 //   })
+
+  /* This is a way to connect Metamask to the app */
+  // if (window.ethereum) {
+  //   window.web3 = new Web3(window.ethereum);
+  //   window.ethereum.enable();
+  // }

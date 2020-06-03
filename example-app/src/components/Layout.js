@@ -39,7 +39,7 @@ export default class Layout extends React.Component {
       user,
       network,
       address: account.address,
-      username: user === 'east' ? 'East Coast User' : 'West Coast User'
+      username: account.username,
     })
   }
   render() { 
