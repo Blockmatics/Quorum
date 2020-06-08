@@ -22,7 +22,6 @@ var nodePublicKey = 'BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo='
 let admin1 = '0xed9d02e382b34818e88B88a309c7fe71E65f419d'
 let sender = "0x9186eb3d20cbd1f5f992a950d808c4495153abd5"
 let privateKey = "794392ba288a24092030badaadfee71e3fa55ccef1d70c708baf55c07ed538a8"
-var amount = 1000000
 let admin2 = '0xca843569e3427144cead5e4d5999a3d0ccf92b8e'
 
 // Instantiate the contract from ABI artifact and the deployed address.
@@ -30,6 +29,11 @@ let abi = eastJson.abi
 let networkId = 10
 let contractAddress = eastJson.networks[networkId].address
 let web3 = new Web3(new Web3.providers.HttpProvider(NODE1))
+let contractInst = new web3.eth.Contract(abi, contractAddress)
+
+/* Set up the ERC20 Approve( admin, amount ) */
+var amount = 1000000
+let transaction = contractInst.methods.approve(admin1, amount)
 
 quorumjs.extend(web3);
 console.log(Object.keys(web3.quorum))
@@ -37,17 +41,11 @@ const enclaveOptions = {
   privateUrl: 'http://localhost:9081'
 }
 const txnMngr = quorumjs.RawTransactionManager(web3, enclaveOptions);
-let contractInst = new web3.eth.Contract(abi, contractAddress)
 
-let abiPublic = publicJson.abi
-let contractAddressPublic = publicJson.networks[networkId].address
-let contractInstPublic = new web3.eth.Contract(abiPublic, contractAddressPublic)
-
-let transaction = contractInst.methods.approve(admin1, amount)
-let encodedTrans = transaction.encodeABI();
 
 web3.eth.getTransactionCount(sender).then(count => {
   console.log(count)
+  let encodedTrans = transaction.encodeABI();
   const txParams = {
     // from: sender,
     from: {
@@ -66,9 +64,14 @@ web3.eth.getTransactionCount(sender).then(count => {
     privateFor: [nodePublicKey],
   }
   console.log(txParams)
+  
   txnMngr.sendRawTransaction(txParams).then(receipt => {
     console.log(receipt)
     /* Transfer half of totalSupply to Node 2 admin */
+    let abiPublic = publicJson.abi
+    let contractAddressPublic = publicJson.networks[networkId].address
+    let contractInstPublic = new web3.eth.Contract(abiPublic, contractAddressPublic)
+
     contractInstPublic.methods
       .transfer(admin2, amount / 8)
       .send({
