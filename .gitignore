@@ -3,3 +3,4 @@ node_modules/
 contract/node_modules/
 contract/.secret*
 contract/build
+networks/
