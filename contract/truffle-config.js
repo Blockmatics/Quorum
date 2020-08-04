@@ -65,7 +65,15 @@ module.exports = {
       network_id: 10
     },
 
-    // Add Node2 and/or Node3 here:
+    node2: {
+      host: 'localhost',
+      port: 22001,
+      type: "quorum",
+      gasPrice: 0,
+      network_id: 10
+    },
+
+    /* Add node3 following the pattern of ports */
 
 
     // node1wallet: {
