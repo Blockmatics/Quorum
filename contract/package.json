@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@openzeppelin/contracts": "^3.0.1"
+    "@openzeppelin/contracts": "^4.7.2"
   },
   "devDependencies": {
     "truffle-hdwallet-provider": "^1.0.17",
